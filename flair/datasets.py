@@ -3441,7 +3441,7 @@ class BABE(ColumnCorpus):
         super(BABE, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
+            tag_to_bioes=None,
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
         )
