@@ -177,8 +177,8 @@ class SequenceTagger(flair.nn.Model):
 
             # final linear map to tag space
             if self.use_self_attention:
-                self.W_s1 = torch.nn.Linear(2 * hidden_size, 350)
-                self.W_s2 = torch.nn.Linear(350, 30)
+                self.W_s1 = torch.nn.Linear(2 * hidden_size, 300)
+                self.W_s2 = torch.nn.Linear(300, 100)
             self.linear = torch.nn.Linear(
                 hidden_size * num_directions, len(tag_dictionary)
             )
