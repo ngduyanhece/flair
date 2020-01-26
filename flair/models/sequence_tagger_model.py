@@ -179,7 +179,6 @@ class SequenceTagger(flair.nn.Model):
             if self.use_self_attention:
                 self.W_s1 = torch.nn.Linear(2 * hidden_size, 350)
                 self.W_s2 = torch.nn.Linear(350, 30)
-                self.fc_layer = torch.nn.Linear(30 * 2 * hidden_size, hidden_size * num_directions)
             self.linear = torch.nn.Linear(
                 hidden_size * num_directions, len(tag_dictionary)
             )
@@ -560,12 +559,11 @@ class SequenceTagger(flair.nn.Model):
             attn_weight_matrix = attn_weight_matrix.permute(0, 2, 1)
             attn_weight_matrix = F.softmax(attn_weight_matrix, dim=2)
             hidden_matrix = torch.bmm(attn_weight_matrix, sentence_tensor)
-            fc_out = self.fc_layer(hidden_matrix.view(-1, hidden_matrix.size()[1] * hidden_matrix.size()[2]))
-            features = self.linear(fc_out)
-            print(features.size())
+            features = self.linear(hidden_matrix)
+            #print(features.size())
         else:
             features = self.linear(sentence_tensor)
-            print(features.size())
+            #print(features.size())
         return features
 
     def _score_sentence(self, feats, tags, lens_):
