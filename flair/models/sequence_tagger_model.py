@@ -71,6 +71,7 @@ class SequenceTagger(flair.nn.Model):
         tag_type: str,
         use_crf: bool = True,
         use_rnn: bool = True,
+        use_self_attention: bool = True,
         rnn_layers: int = 1,
         dropout: float = 0.0,
         word_dropout: float = 0.05,
@@ -97,6 +98,7 @@ class SequenceTagger(flair.nn.Model):
         super(SequenceTagger, self).__init__()
 
         self.use_rnn = use_rnn
+        self.use_self_attention = use_self_attention
         self.hidden_size = hidden_size
         self.use_crf: bool = use_crf
         self.rnn_layers: int = rnn_layers
@@ -174,6 +176,10 @@ class SequenceTagger(flair.nn.Model):
                     # self.hs_initializer(self.lstm_init_c)
 
             # final linear map to tag space
+            if self.use_self_attention:
+                self.W_s1 = torch.nn.Linear(2 * hidden_size, 350)
+                self.W_s2 = torch.nn.Linear(350, 30)
+                self.fc_layer = torch.nn.Linear(30 * 2 * hidden_size, hidden_size * num_directions)
             self.linear = torch.nn.Linear(
                 hidden_size * num_directions, len(tag_dictionary)
             )
@@ -207,6 +213,7 @@ class SequenceTagger(flair.nn.Model):
             "tag_type": self.tag_type,
             "use_crf": self.use_crf,
             "use_rnn": self.use_rnn,
+            "use_rnn": self.use_self_attention,
             "rnn_layers": self.rnn_layers,
             "use_word_dropout": self.use_word_dropout,
             "use_locked_dropout": self.use_locked_dropout,
@@ -240,6 +247,7 @@ class SequenceTagger(flair.nn.Model):
             tag_type=state["tag_type"],
             use_crf=state["use_crf"],
             use_rnn=state["use_rnn"],
+            use_self_attention=state["use_self_attention"],
             rnn_layers=state["rnn_layers"],
             dropout=use_dropout,
             word_dropout=use_word_dropout,
@@ -361,6 +369,7 @@ class SequenceTagger(flair.nn.Model):
         data_loader: DataLoader,
         out_path: Path = None,
         embedding_storage_mode: str = "none",
+        verbose=False
     ) -> (Result, float):
 
         if type(out_path) == str:
@@ -414,11 +423,16 @@ class SequenceTagger(flair.nn.Model):
                     gold_tags = [
                         (tag.tag, str(tag)) for tag in sentence.get_spans(self.tag_type)
                     ]
+                    if verbose:
+                        print("___________ gold tag ______________")
+                        print(gold_tags)
                     # make list of predicted tags
                     predicted_tags = [
                         (tag.tag, str(tag)) for tag in sentence.get_spans("predicted")
                     ]
-
+                    if verbose:
+                        print("___________ predicted tag ______________")
+                        print(predicted_tags)
                     # check for true positives, false positives and false negatives
                     for tag, prediction in predicted_tags:
                         if (tag, prediction) in gold_tags:
@@ -541,8 +555,15 @@ class SequenceTagger(flair.nn.Model):
             #     sentence_tensor = self.word_dropout(sentence_tensor)
             if self.use_locked_dropout > 0.0:
                 sentence_tensor = self.locked_dropout(sentence_tensor)
-
-        features = self.linear(sentence_tensor)
+        if self.use_self_attention:
+            attn_weight_matrix = self.W_s2(F.tanh(self.W_s1(sentence_tensor)))
+            attn_weight_matrix = attn_weight_matrix.permute(0, 2, 1)
+            attn_weight_matrix = F.softmax(attn_weight_matrix, dim=2)
+            hidden_matrix = torch.bmm(attn_weight_matrix, sentence_tensor)
+            fc_out = self.fc_layer(hidden_matrix.view(-1, hidden_matrix.size()[1] * hidden_matrix.size()[2]))
+            features = self.linear(fc_out)
+        else:
+            features = self.linear(sentence_tensor)
 
         return features
 
