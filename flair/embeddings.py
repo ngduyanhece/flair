@@ -315,14 +315,18 @@ class WordEmbeddings(TokenEmbeddings):
 
         self.name: str = str(embeddings)
         self.static_embeddings = True
-
+        from gensim.test.utils import datapath, get_tmpfile
+        from gensim.models import KeyedVectors
+        from gensim.scripts.glove2word2vec import glove2word2vec
         if str(embeddings).endswith(".bin"):
             self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
                 str(embeddings), binary=True
             )
         else:
-            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load(
-                str(embeddings)
+            tmp_file = get_tmpfile("tmp_word2vec.txt")
+            _ = glove2word2vec(embeddings, tmp_file)
+            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
+                tmp_file
             )
 
         self.field = field
