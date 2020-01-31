@@ -386,7 +386,7 @@ class SequenceTagger(flair.nn.Model):
                 with torch.no_grad():
                     features = self.forward(batch)
                     loss = self._calculate_loss(features, batch)
-                    tags, _ = self._obtain_labels(
+                    tags, _, raw_seq = self._obtain_labels(
                         feature=features,
                         batch_sentences=batch,
                         transitions=transitions,
@@ -394,8 +394,9 @@ class SequenceTagger(flair.nn.Model):
                     )
 
                 eval_loss += loss
-
+                print(raw_seq)
                 for (sentence, sent_tags) in zip(batch, tags):
+
                     for (token, tag) in zip(sentence.tokens, sent_tags):
                         token: Token = token
                         token.add_tag_label("predicted", tag)
@@ -684,7 +685,7 @@ class SequenceTagger(flair.nn.Model):
                     ]
                 )
 
-        return tags, all_tags
+        return tags, all_tags, tag_seq
 
     @staticmethod
     def _softmax(x, axis):
