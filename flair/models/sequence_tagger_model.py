@@ -237,7 +237,7 @@ class SequenceTagger(flair.nn.Model):
             False
             if "train_initial_hidden_state" not in state.keys()
             else state["train_initial_hidden_state"]
-        )evaluate
+        )
 
         model = SequenceTagger(
             hidden_size=state["hidden_size"],
