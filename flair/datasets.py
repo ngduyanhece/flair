@@ -3403,3 +3403,44 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
             timeout=timeout,
             worker_init_fn=worker_init_fn,
         )
+class BABE(ColumnCorpus):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
+        document_as_sequence: bool = False,
+    ):
+        """
+        initalize the dataset from chatlog of babeshop
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # check if data there
+        if not data_folder.exists():
+            log.warning("-" * 100)
+            log.warning(f'ACHTUNG: BABE dataset not found at "{data_folder}".')
+            log.warning(
+                'please contact DucPv for this dataset'
+            )
+            log.warning("-" * 100)
+
+        super(BABE, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes=None,
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+        )

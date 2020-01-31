@@ -431,7 +431,10 @@ class SequenceTagger(flair.nn.Model):
                             metric.add_fn(tag)
                         else:
                             metric.add_tn(tag)
-
+                    print("GOLD TAGS: \n")
+                    print(gold_tags)
+                    print('PREDICTED TAGS: \n')
+                    print(predicted_tags)
                 store_embeddings(batch, embedding_storage_mode)
 
             eval_loss /= batch_no
