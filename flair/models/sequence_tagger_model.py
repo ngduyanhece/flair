@@ -17,7 +17,7 @@ from flair.datasets import SentenceDataset, StringDataset
 from flair.embeddings import TokenEmbeddings
 from flair.file_utils import cached_path
 from flair.training_utils import Metric, Result, store_embeddings
-
+from sklearn_crfsuite.metrics import flat_classification_report
 log = logging.getLogger("flair")
 
 START_TAG: str = "<START>"
@@ -369,6 +369,9 @@ class SequenceTagger(flair.nn.Model):
         with torch.no_grad():
             eval_loss = 0
 
+            raw_p_tags = []
+            true_tags = []
+
             batch_no: int = 0
 
             metric = Metric("Evaluation")
@@ -395,7 +398,9 @@ class SequenceTagger(flair.nn.Model):
 
                 eval_loss += loss
                 for tag in raw_tags:
-                    print(tag)
+                    raw_p_tags.append(tag)
+                for sentence in batch:
+                    true_tags.append([t.get_tag('ner').value for t in sentence.tokens])
                 for (sentence, sent_tags) in zip(batch, tags):
                     for (token, tag) in zip(sentence.tokens, sent_tags):
                         token: Token = token
@@ -435,6 +440,8 @@ class SequenceTagger(flair.nn.Model):
                 store_embeddings(batch, embedding_storage_mode)
 
             eval_loss /= batch_no
+
+            print(flat_classification_report(true_tags, raw_p_tags, digits=3))
 
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
