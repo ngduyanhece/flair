@@ -331,7 +331,7 @@ class SequenceTagger(flair.nn.Model):
                     continue
 
                 feature: torch.Tensor = self.forward(batch)
-                tags, all_tags = self._obtain_labels(
+                tags, all_tags, _ = self._obtain_labels(
                     feature=feature,
                     batch_sentences=batch,
                     transitions=transitions,
