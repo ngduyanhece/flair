@@ -670,7 +670,7 @@ class SequenceTagger(flair.nn.Model):
             )
             raw_tags.append(
                 [
-                    Label(self.tag_dictionary.get_item_for_index(tag), conf).split(" ")[0]
+                    str(Label(self.tag_dictionary.get_item_for_index(tag), conf)).split(" ")[0]
                     for conf, tag in zip(confidences, tag_seq)
                 ]
             )
