@@ -397,10 +397,10 @@ class SequenceTagger(flair.nn.Model):
                     )
 
                 eval_loss += loss
-                for tag in raw_tags:
-                    raw_p_tags.append(tag)
-                for sentence in batch:
-                    true_tags.append([t.get_tag('ner').value for t in sentence.tokens])
+                #for tag in raw_tags:
+                #    raw_p_tags.append(tag)
+                #for sentence in batch:
+                #    true_tags.append([t.get_tag('ner').value for t in sentence.tokens])
                 for (sentence, sent_tags) in zip(batch, tags):
                     for (token, tag) in zip(sentence.tokens, sent_tags):
                         token: Token = token
@@ -441,7 +441,7 @@ class SequenceTagger(flair.nn.Model):
 
             eval_loss /= batch_no
 
-            print(flat_classification_report(true_tags, raw_p_tags, digits=3))
+            #print(flat_classification_report(true_tags, raw_p_tags, digits=3))
 
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
